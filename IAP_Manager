@@ -1,0 +1,247 @@
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using DG.Tweening;
+using SA.CrossPlatform.InApp;
+using System;
+using SA.CrossPlatform.UI;
+using UnityEngine.UI;
+using TMPro;
+
+public class IAP_Manager : MonoBehaviour
+{
+    public RectTransform _IAPManagerMenu;
+
+    private UM_iInAppClient m_Client;
+
+    [Header("IAP API Buttons - NonConsumable")]
+    public Button _unlockAllButton;
+    public string _unlockProductId = "unlock_all";
+    public TMP_Text _unlockAllPriceText;
+    private bool _IsUnlockAllPurchaseBefore;
+
+    public Button _removeAdsButton;
+    public string _removeAdsProductId = "remove_ads";
+    public TMP_Text _removeAdsPriceText;
+    private bool _IsRemoveAdsPurchaseBefore;
+
+    [Header("IAP API Buttons - Consumable")]
+    public Button _20DiamondsButton; // Watch ad for reward
+
+    public Button _2000DiamondsButton;
+    public string _2000DiamondsProductId = "2000_diamonds";
+    public TMP_Text _2000DiamondPriceText;
+
+    public Button _4000DiamondsButton;
+    public string _4000DiamondsProductId = "4000_diamonds";
+    public TMP_Text _4000DiamondPriceText;
+
+    public Button _10000DiamondsButton;
+    public string _10000DiamondsProductId = "10000_diamonds";
+    public TMP_Text _10000DiamondPriceText;
+
+   [Header("IAP API Buttons - Others")]
+    public Button _restoreButtonForIOS;
+
+    
+
+
+    public void Start()
+    {
+        DOTween.Init();
+        _IAPManagerMenu.DOAnchorPos(Vector2.zero, 0.5f);
+
+        
+
+        _IsRemoveAdsPurchaseBefore = false;
+        _IsUnlockAllPurchaseBefore = false;
+
+        _20DiamondsButton.interactable = true;
+        SetStoreActiveState(false);
+        ConnectToPaymentServer();    
+    }
+    
+
+    public void ConnectToPaymentServer()
+    {
+        m_Client = UM_InAppService.Client;
+
+        var observer = new MyTransactionObserver();
+        m_Client.SetTransactionObserver(observer);
+
+        m_Client.Connect(
+            (connectionResult) =>
+            {
+                if (connectionResult.IsSucceeded)
+                {
+                    SetStoreActiveState(true);
+                    SetButtonTextsFromServer();
+                    Debug.Log("Connected To Server Succesfully");
+                    UM_DialogsUtility.ShowMessage("Connection", "Succeded");
+                }
+                else
+                {
+                    UM_DialogsUtility.ShowMessage("Connection Failed", connectionResult.Error.FullMessage);
+                }
+            }
+            );
+
+    }
+
+    public void SetButtonTextsFromServer()
+    {
+        var _productUnlockAll = UM_InAppService.Client.GetProductById(_unlockProductId);
+        var _product2000Diamond = UM_InAppService.Client.GetProductById(_2000DiamondsProductId);
+        var _product4000Diamond = UM_InAppService.Client.GetProductById(_4000DiamondsProductId);
+        var _product10000Diamond = UM_InAppService.Client.GetProductById(_10000DiamondsProductId);
+        var _productremoveads = UM_InAppService.Client.GetProductById(_10000DiamondsProductId);
+
+        if (_productUnlockAll != null)
+        {
+            _unlockAllPriceText.text = _productUnlockAll.Price + _productUnlockAll.PriceCurrencyCode;
+        }
+
+        else if(_productUnlockAll == null)
+        {
+            _unlockAllPriceText.text = "Not available";
+        }
+
+        if (_product2000Diamond != null)
+        {
+            _2000DiamondPriceText.text = _product2000Diamond.Price + _product2000Diamond.PriceCurrencyCode;
+        }
+
+        else if (_product2000Diamond == null)
+        {
+            _2000DiamondPriceText.text = "Not available";
+        }
+
+        if (_product4000Diamond != null)
+        {
+            _4000DiamondPriceText.text = _product4000Diamond.Price + _product4000Diamond.PriceCurrencyCode;
+        }
+
+        else if (_product4000Diamond == null)
+        {
+            _4000DiamondPriceText.text = "Not available";
+        }
+
+        if (_product10000Diamond != null)
+        {
+            _10000DiamondPriceText.text = _product10000Diamond.Price + _product10000Diamond.PriceCurrencyCode;
+        }
+
+        else if (_product10000Diamond == null)
+        {
+            _10000DiamondPriceText.text = "Not available";
+        }
+
+        if (_productremoveads != null)
+        {
+            _removeAdsPriceText.text = _productremoveads.Price + _productremoveads.PriceCurrencyCode;
+        }
+
+        else if (_productremoveads == null)
+        {
+            _removeAdsPriceText.text = "Not available";
+        }
+       
+    }
+
+    private void SetStoreActiveState(bool isActive)
+    {
+        _removeAdsButton.interactable = isActive;
+        _2000DiamondsButton.interactable = isActive;
+        _4000DiamondsButton.interactable = isActive;
+        _10000DiamondsButton.interactable = isActive;
+        _unlockAllButton.interactable = isActive;
+
+        if(Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            _restoreButtonForIOS.gameObject.SetActive(true);
+            _restoreButtonForIOS.interactable = isActive;
+        }
+        else if(Application.platform ==RuntimePlatform.Android)
+        {
+            _restoreButtonForIOS.gameObject.SetActive(false);
+        }
+
+
+        if (isActive == false)
+        {
+            
+            Debug.Log("Not yet Connected!");
+        }
+        else
+        {
+           
+            Debug.Log("Connected!");
+          
+        }
+    }
+
+    public void RemoveAdsButtonFunction()
+    {
+        if(_removeAdsButton.interactable == true && _IsRemoveAdsPurchaseBefore == false)
+        {
+            UM_InAppService.Client.AddPayment("remove_ads");
+        }
+    }
+
+    public void _UnlockAllButtonFunction()
+    {
+        if (_unlockAllButton.interactable == true && _IsUnlockAllPurchaseBefore == false)
+        {
+            UM_InAppService.Client.AddPayment("unlock_all");
+        }
+    }
+
+
+    public void _20DiamondsButtonFunction() // On Click
+    {
+
+        Admob_ManagerUMP.Instance.RewardedAdShow();
+       
+    } 
+
+    
+
+    public void _2000DiamondsButtonFunction()
+    {
+        if (_2000DiamondsButton.interactable == true)
+        {
+            UM_InAppService.Client.AddPayment("2000_diamonds");
+        }
+    }
+
+
+    public void _4000DiamondsButtonFunction()
+    {
+        if (_4000DiamondsButton.interactable == true)
+        {
+            UM_InAppService.Client.AddPayment("4000_diamonds");
+        }
+    }
+
+    public void _10000DiamondsButtonFunction()
+    {
+        if (_10000DiamondsButton.interactable == true)
+        {
+            UM_InAppService.Client.AddPayment("10000_diamonds");
+        }
+    }
+
+    public void IosRestore()
+    {
+        UM_InAppService.Client.RestoreCompletedTransactions(); //DETAYLANDIRILACAK
+    }
+
+
+    public void MainSceneButtonFunction()
+    {
+        SceneManager.LoadScene("MainScene");
+    }
+}
+

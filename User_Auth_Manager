@@ -1,0 +1,49 @@
+/*
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using SA.CrossPlatform.GameServices;
+using UnityEngine.UI;
+
+public class User_Auth_Manager : MonoBehaviour
+{
+    string _userAuthStateToText;
+    public Text _userAuthStateText;
+
+    public void Awake()
+    {
+        UserSignIn();
+    }
+    public void UserSignIn()
+    {
+        var client = UM_GameService.SignInClient;
+        client.SingIn(
+            (result) => {
+                if (result.IsSucceeded)
+                {
+                    Debug.Log("Player is signed");
+                }
+                else
+                {
+                    Debug.Log("Sing in failed: " + result.Error.FullMessage);
+                }
+            });
+    }
+
+    public void UserAuthState()
+    {
+        var client = UM_GameService.SignInClient;
+        if (client.PlayerInfo.State == UM_PlayerState.SignedIn)
+        {
+            _userAuthStateToText = "Signed-In";
+            _userAuthStateText.text = _userAuthStateToText;
+            Debug.Log("Player is signed");
+        }
+        else
+        {
+            _userAuthStateToText = "Not-Signed-In";
+            _userAuthStateText.text = _userAuthStateToText;
+            Debug.Log("Sing in failed:");
+        }
+    }
+}

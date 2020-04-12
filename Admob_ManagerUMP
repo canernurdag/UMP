@@ -1,0 +1,254 @@
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using System;
+using UnityEngine.UI;
+using SA.CrossPlatform.UI;
+using SA.CrossPlatform.Advertisement;
+using TMPro;
+
+public class Admob_ManagerUMP : MonoBehaviour
+{
+    public static Admob_ManagerUMP Instance;
+   
+    public UM_iAdsClient _adsClient;
+
+    public Text _adStatuText;
+    [Header("Diamond Text")]
+    public GameObject _diamondScoreGameObject;
+
+
+    public string _AdmobAppID = "";
+
+    [Header("Test Ads")]
+    public string _testBannerAdId = "ca-app-pub-3940256099942544/6300978111";
+    public string _testInterAdId = "ca-app-pub-3940256099942544/1033173712";
+    public string _testRewardedAdId = "ca-app-pub-3940256099942544/5224354917";
+
+    [Header("The App Ads")]
+    public string _bannerAdId = "";
+    public string _interAdId = "";
+    public string _rewardedAdId = "";
+
+
+
+    private void Awake()
+    {
+        
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+        
+
+        _adsClient = UM_AdvertisementService.GetClient(UM_AdPlatform.Google);
+
+       // AdsIdInput();
+        AdsClientInit();
+
+        //AdsIdInput();
+
+        Invoke("BannerAdsLoad", 1);
+        Invoke("NonRewardedAdLoad", 1);
+        Invoke("RewardedAdLoad", 1);
+
+        Invoke("BannerAdsShow",2f);
+       
+    }
+
+    public void Update()
+    {
+        if(_adStatuText != null)
+        {
+            _adStatuText.text = _adsClient.IsInitialized.ToString();
+        }
+
+    }
+
+    public void AdsIdInput()
+    {
+        var settings = UM_GoogleAdsSettings.Instance;
+        var android = settings.AndroidIds;
+
+        android.AppId = _AdmobAppID;
+
+        android.BannerId = _testBannerAdId;
+        android.RewardedId = _testRewardedAdId;
+        android.NonRewardedId = _testInterAdId;
+
+        //var ios = settings.IOSIds;
+        // ios.AppId = "ca-app-pub-6101605888755494~3384895876";
+        //ios.BannerId = "ca-app-pub-6101605888755494/5025280606";
+        //ios.RewardedId = "ca-app-pub-6101605888755494/7756628990";
+        // ios.NonRewardedId = "ca-app-pub-6101605888755494/2207545572";
+    }
+
+    public void AdsClientInit()
+    {
+        if (_adsClient.IsInitialized)
+        {
+            Debug.Log("Ads service is ready to be used");
+        }
+        else
+        {
+            _adsClient.Initialize(
+                (result) =>
+                {
+                    if (result.IsSucceeded)
+                    {
+                        Debug.Log("Ads service is ready to be used");
+                        
+                    }
+
+                    else
+                    {
+                        Debug.Log("Ads service init problem");
+                    }
+                }
+                );
+        }
+    }
+  
+    public void BannerAdsLoad()
+    {
+        _adsClient.Banner.Load(
+            (result) =>
+            {
+                if (result.IsSucceeded)
+                {
+                    Debug.Log("Banner Ads Loaded Sucessfully");
+                }
+                else if (result.IsFailed)
+                {
+                    Debug.Log("Banner Ads Loaded UnSucessfully");
+                }
+            }            
+            );
+    }
+    public void BannerAdsShow()
+    {
+       // if (User_Manager._Instance._IsAdFreeLocal == false) // Check No-Ads
+       // {
+            if (_adsClient.Banner.IsReady) //Check the ad is ready
+            {
+                _adsClient.Banner.Show(
+                () =>
+                {
+                    Debug.Log("Banner Ads Showed Succesfully");
+                }
+                );
+
+                //_lastAdTime = Time.time;
+            }
+        //}
+    }
+
+
+    public void NonRewardedAdLoad()
+    {
+        _adsClient.NonRewardedAds.Load(
+            (result) =>
+            {
+                if (result.IsSucceeded)
+                {
+                    Debug.Log("NonRewarded Ads Loaded Sucessfully");
+                }
+                else if (result.IsFailed)
+                {
+                    Debug.Log("NonRewarded Ads Loaded UnSucessfully");
+                }
+            }
+            );
+
+        
+    }
+    public void NonRewardedAdShow()
+    {
+       // if (User_Manager._Instance._IsAdFreeLocal == false) // Check No-Ads
+       // {
+           if (_adsClient.NonRewardedAds.IsReady) //Check the ad is ready
+           {
+                        _adsClient.NonRewardedAds.Show(
+                        () =>
+                        {
+                            Debug.Log("NonRewarded Ads Showed Succesfully");
+                        }
+                        );
+
+                    //_lastAdTime = Time.time;
+                    NonRewardedAdLoad();
+           }
+      //  }
+    }
+
+    public void RewardedAdLoad()
+    {
+        _adsClient.RewardedAds.Load(
+            (resut) =>
+            {
+                if (resut.IsSucceeded)
+                {
+                    Debug.Log("Rewarded Ads Loaded Sucessfully");
+
+                }
+                else if (resut.IsFailed)
+                {
+                    Debug.Log("Rewarded Ads Loaded UnSucessfully");
+                }
+            }
+            );
+
+    }
+    public void RewardedAdShow()
+    {
+       // if (User_Manager._Instance._IsAdFreeLocal == false)
+         // {
+            if (_adsClient.RewardedAds.IsReady)
+            {
+                _adsClient.RewardedAds.Show(
+                    (result) =>
+                    {
+                        if (result == UM_RewardedAdsResult.Finished)
+                        {
+                            User_Manager._Instance._userDiamondLocal = User_Manager._Instance._userDiamondLocal + 20;
+                            Instance._diamondScoreGameObject = GameObject.FindGameObjectWithTag("DiamondText");
+                            Instance._diamondScoreGameObject.GetComponentInChildren<TMP_Text>().text = User_Manager._Instance._userDiamondLocal.ToString();
+                            User_Manager._Instance.SaveUserLocal();
+                            RewardedAdLoad();
+                        }
+                        if (result == UM_RewardedAdsResult.Failed)
+                        {
+                          
+                        }
+
+                        if (result == UM_RewardedAdsResult.Skipped)
+                        {
+                            Debug.Log("Reward is failed due to skip the ads");
+                            RewardedAdLoad();
+                            
+                        }
+
+                    }
+                    );
+
+                    //_lastAdTime = Time.time;
+                   // _myIapManager._20DiamondsButton.interactable = false;
+
+                 }
+            
+       // }
+    }
+
+
+
+
+
+
+}
+

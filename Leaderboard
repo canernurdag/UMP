@@ -1,0 +1,94 @@
+
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using SA.CrossPlatform.GameServices;
+using UnityEngine.UI;
+using SA.CrossPlatform.UI;
+using System;
+
+public class Leaderboard : MonoBehaviour
+{
+    public int _currentHighScoreFromServer;
+    public string leaderboardId;
+    public int _highScoreToUpdate;
+
+    public void Start()
+    {
+        DeterminePlatform();
+
+        LoadPlayerScore(); //To get current High Score From Server
+    }
+
+    public void DeterminePlatform()
+    {
+        if(Application.platform == RuntimePlatform.Android)
+        {
+            leaderboardId = "";
+        }
+        else if(Application.platform == RuntimePlatform.IPhonePlayer)
+        {
+            //leaderboardId = "..."; /////////////////////////////////////////////////TO BE CHANGED
+        }
+    }
+
+    public void DisplayLeaderBoard()
+    {
+        var client = UM_GameService.LeaderboardsClient;
+
+        client.ShowUI(
+            (result) =>
+            {
+                if (result.IsSucceeded)
+                {
+                    UM_DialogsUtility.DisplayResultMessage(result);
+                    Debug.Log("User closed Leaderboards native view");
+                }
+                else
+                {
+                    Debug.Log("Failed to start Leaderboards native view: " + result.Error.FullMessage);
+                }
+            });
+
+    }
+
+    public void LoadPlayerScore()
+    {
+
+        var client = UM_GameService.LeaderboardsClient;
+        var span = UM_LeaderboardTimeSpan.AllTime; 
+        var collection = UM_LeaderboardCollection.Public;
+
+        client.LoadCurrentPlayerScore(leaderboardId, span, collection,
+            (result) =>
+            {
+                if (result.IsSucceeded)
+                {
+                    UM_iScore score = result.Score;
+                    _currentHighScoreFromServer = Convert.ToInt32(score.Value);
+                }
+                else
+                {
+                    //Debug.Log("Failed to load player score " + result.Error.FullMessage);
+                }
+            });
+    }
+
+    public void UpdatePlayerScore()
+    {
+        var client = UM_GameService.LeaderboardsClient;
+        int context = 0;
+
+        client.SubmitScore(leaderboardId, _highScoreToUpdate, context,
+            (result) => {
+            if (result.IsSucceeded)
+            {
+                //Debug.Log("Score submitted successfully");
+            }
+            else
+            {
+               // Debug.Log("Failed to submit score: " + result.Error.FullMessage);
+            }
+        });
+    }
+}

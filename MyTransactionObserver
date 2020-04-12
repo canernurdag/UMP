@@ -1,0 +1,87 @@
+/*
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using SA.CrossPlatform.InApp;
+using SA.CrossPlatform.UI;
+using SA.Foundation.Templates;
+
+public class MyTransactionObserver : UM_iTransactionObserver
+{
+
+    public void OnRestoreTransactionsComplete(SA_Result result) { }
+
+    public void OnTransactionUpdated(UM_iTransaction transaction)
+    {
+        switch (transaction.State)
+        {
+            case UM_TransactionState.Restored:
+
+            
+            case UM_TransactionState.Purchased:
+                ProcessCompletedTransaction(transaction);   // => Lets define below when purchasing happens
+                break;
+
+           
+            case UM_TransactionState.Pending:
+                UM_Preloader.UnlockScreen();
+                break;
+
+
+            case UM_TransactionState.Failed:
+                UM_Preloader.UnlockScreen();
+                UM_InAppService.Client.FinishTransaction(transaction);
+                UM_DialogsUtility.ShowMessage("Error", "We wasn't able to process your transaction.  \n" + transaction.Error.Message);
+                break;
+        }
+    }
+
+
+    private static void ProcessCompletedTransaction(UM_iTransaction transaction)
+    {
+        switch (transaction.ProductId)
+        {
+            case "2000_diamonds":
+                User_Manager._Instance._userDiamondLocal = User_Manager._Instance._userDiamondLocal + 2000;
+                User_Manager._Instance.SaveUserLocal();
+                UM_DialogsUtility.ShowMessage("Thank you!", $"You can now use 2000 Diamonds");
+                break;
+
+            case "4000_diamonds":
+                User_Manager._Instance._userDiamondLocal = User_Manager._Instance._userDiamondLocal + 4000;
+                User_Manager._Instance.SaveUserLocal();
+                UM_DialogsUtility.ShowMessage("Thank you!", $"You can now use 4000 Diamonds");
+                break;
+
+            case "10000_diamonds":
+                User_Manager._Instance._userDiamondLocal = User_Manager._Instance._userDiamondLocal + 10000;
+                User_Manager._Instance.SaveUserLocal();
+                UM_DialogsUtility.ShowMessage("Thank you!", $"You can now use 10000 Diamonds");
+                break;
+
+            case "remove_ads":
+                User_Manager._Instance._IsAdFreeLocal = true;
+                User_Manager._Instance.SaveUserLocal();
+                UM_DialogsUtility.ShowMessage("Thank you!", $"There will be no ads from now on");
+                break;
+
+            case "unlock_all":
+                User_Manager._Instance._moto0Local = true;
+                User_Manager._Instance._moto1Local = true;
+                User_Manager._Instance._moto2Local = true;
+                User_Manager._Instance._moto3Local = true;
+                User_Manager._Instance._moto4Local = true;
+                User_Manager._Instance._moto5Local = true;
+                User_Manager._Instance._moto6Local = true;
+                User_Manager._Instance._moto7Local = true;
+                User_Manager._Instance._IsAdFreeLocal = true;
+                User_Manager._Instance.SaveUserLocal();
+                UM_DialogsUtility.ShowMessage("Thank you!", $"Everything is unlocked from now on");
+                break;
+        }
+        UM_Preloader.UnlockScreen(); // => Unlock the loading screen
+        UM_InAppService.Client.FinishTransaction(transaction); // => To finish transaction after sucessfully purhcase
+    }
+
+}
+*/
